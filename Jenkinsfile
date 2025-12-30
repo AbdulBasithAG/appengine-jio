@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        PROJECT_ID = 'practice-devops-482004'
+        GOOGLE_APPLICATION_CREDNTIALS = credentials('gcp-service-account')
     }
 
     stages {
