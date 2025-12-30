@@ -1,23 +1,51 @@
-name: Pylint
+name: Deploy to App Engine
 
-on: [push]
+on:
+  push:
+    branches:
+      - main
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ["3.8", "3.9", "3.10"]
+
+    env:
+      PROJECT_ID: practice-devops-482004
+
     steps:
-    - uses: actions/checkout@v4
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v3
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install pylint
-    - name: Analysing the code with pylint
-      run: |
-        pylint $(git ls-files '*.py')
+      # 1️⃣ Checkout code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2️⃣ Setup Python 3.11
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # 3️⃣ Install dependencies
+      - name: Install Python dependencies
+        run: |
+          python --version
+          python -m venv venv
+          source venv/bin/activate
+          pip install --upgrade pip setuptools wheel
+          pip install -r requirements.txt
+
+      # 4️⃣ Authenticate to GCP
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+
+      # 5️⃣ Setup gcloud
+      - name: Setup gcloud CLI
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+
+      # 6️⃣ Deploy to App Engine
+      - name: Deploy to App Engine
+        run: |
+          source venv/bin/activate
+          gcloud app deploy app.yaml --quiet --verbosity=info
