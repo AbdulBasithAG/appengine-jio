@@ -2,7 +2,8 @@ pipeline {
     agent any
 
     environment {
-        GOOGLE_APPLICATION_CREDNTIALS = credentials('gcp-service-account')
+        GOOGLE_APPLICATION_CREDENTIALS = credentials('gcp-service-account')
+        PROJECT_ID = 'practice-devops-482004'   // ✅ ADD THIS
     }
 
     stages {
@@ -13,9 +14,7 @@ pipeline {
                 sh '''
                     python3 --version
                     python3 -m venv venv
-
                     . venv/bin/activate
-
                     pip install --upgrade pip setuptools wheel
                     pip install -r requirements.txt
                 '''
@@ -35,7 +34,7 @@ pipeline {
                 withCredentials([file(credentialsId: 'gcp-service-account', variable: 'KEYFILE')]) {
                     sh '''
                         gcloud auth activate-service-account --key-file=$KEYFILE
-                        gcloud config set project ${PROJECT_ID}
+                        gcloud config set project $PROJECT_ID
                     '''
                 }
             }
@@ -54,7 +53,6 @@ pipeline {
 
     post {
         always {
-            echo "Cleaning up workspace..."
             cleanWs()
         }
         success {
